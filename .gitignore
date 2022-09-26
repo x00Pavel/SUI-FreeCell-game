@@ -2,3 +2,6 @@
 *.d
 fc-sui
 test-bin
+.*
+build
+*.txt
