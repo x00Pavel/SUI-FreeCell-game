@@ -51,6 +51,8 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 
 	std::shared_ptr<SearchState> shared_init_state = std::make_shared<SearchState>(init_state);
 	s.push(shared_init_state);
+	parent[init_state] = shared_init_state;
+	depth[init_state] = 0;
 
 	while (!s.empty()) {
 		std::shared_ptr<SearchState> current_state = s.top();
@@ -62,6 +64,7 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 			for (auto action : current_state->actions()) {
 				std::shared_ptr<SearchState> new_state = std::make_shared<SearchState>(action.execute(*current_state));
 
+				// Do not push states that were already seen
 				if (parent.find(*new_state) == parent.end()) {
 					s.push(new_state);
 					parent[*new_state] = current_state;
