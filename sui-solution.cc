@@ -44,16 +44,17 @@ std::vector<SearchAction> BreadthFirstSearch::solve(const SearchState &init_stat
 
 std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state) {
 	std::stack<std::shared_ptr<SearchState>> s;
-	std::map<SearchState, std::shared_ptr<SearchState>> parent;
 	struct node_info {
 		std::shared_ptr<SearchAction> action;
+		std::shared_ptr<SearchState> parent;
 		int depth;
 	};
 	std::map<SearchState, struct node_info> info;
 
 	std::shared_ptr<SearchState> shared_init_state = std::make_shared<SearchState>(init_state);
 	s.push(shared_init_state);
-	parent[init_state] = shared_init_state;
+	info[init_state].action = nullptr;
+	info[init_state].parent = shared_init_state;
 	info[init_state].depth = 0;
 
 	while (!s.empty()) {
@@ -68,11 +69,11 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 				std::shared_ptr<SearchState> new_state = std::make_shared<SearchState>(action.execute(*current_state));
 				
 				// Do not push states that were already seen
-				if (parent.find(*new_state) == parent.end()) {
+				if (info.find(*new_state) == info.end()) {
 					s.push(new_state);
-					parent[*new_state] = current_state;
 					struct node_info n_info = {
 						std::make_shared<SearchAction>(action),
+						current_state,
 						new_depth
 					};
 					info.insert(std::pair<SearchState, node_info>(*new_state, n_info));
@@ -83,7 +84,9 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 					// Reconstruct the path of actions that led to the final state
 					while (*new_state < init_state) {
 						solution.push_back(*(info.at(*new_state).action));
-						new_state = parent[*new_state];
+						new_state = info[*new_state].parent;
+						// std::cout << *new_state;
+						// std::cout << *(info.at(*new_state).action) << std::endl << std::endl;
 					}
 					return solution;
 				}
