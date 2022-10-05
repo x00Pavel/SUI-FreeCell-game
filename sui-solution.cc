@@ -30,13 +30,12 @@ std::vector<SearchAction> BreadthFirstSearch::solve(const SearchState &init_stat
 			if (new_state->isFinal()) {
 				std::vector<SearchAction> solution;
 				// Reconstruct the path of actions that led to the final state
-				while (*new_state < init_state) {
+				while (new_state != shared_init_state) {
 					solution.push_back(actions.at(*new_state));
 					new_state = parent[*new_state];
 				}
 				return solution;
 			}
-
 		}
 	}
 	return {};
@@ -63,7 +62,7 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 
 		int curr_depth = info[*current_state].depth;
 		if (curr_depth <= depth_limit_) {
-			int new_depth = curr_depth++;
+			int new_depth = curr_depth + 1;
 
 			for (auto action : current_state->actions()) {
 				std::shared_ptr<SearchState> new_state = std::make_shared<SearchState>(action.execute(*current_state));
@@ -82,7 +81,7 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 				if (new_state->isFinal()) {
 					std::vector<SearchAction> solution;
 					// Reconstruct the path of actions that led to the final state
-					while (*new_state < init_state) {
+					while (new_state != shared_init_state) {
 						solution.push_back(*(info.at(*new_state).action));
 						new_state = info[*new_state].parent;
 						// std::cout << *new_state;
