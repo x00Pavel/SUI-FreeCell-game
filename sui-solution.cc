@@ -89,6 +89,7 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 						// std::cout << *new_state;
 						// std::cout << *(info.at(*new_state).action) << std::endl << std::endl;
 					}
+					std::reverse(solution.begin(), solution.end());
 					return solution;
 				}
 			}
@@ -121,6 +122,8 @@ std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
 	while (!open.empty()) {
 		int best = std::numeric_limits<int>::max();
 		std::shared_ptr<SearchState> best_choice = nullptr;
+
+		// Looking for best candidate for expanding based on heuristic
 		for (std::shared_ptr<SearchState> state_ptr: open) {
 			int h = compute_heuristic(*state_ptr, *heuristic_);
 			int g = info[state_ptr].depth;
@@ -140,12 +143,12 @@ std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
 			// If the key is not present, find returns an iterator to end
 			if (closed.find(*new_state) == closed.end()) {
 				open.insert(new_state);
-					struct node_info n_info = {
-						std::make_shared<SearchAction>(action),
-						best_choice,
-						new_depth
-					};
-					info.insert(std::pair<std::shared_ptr<SearchState>, node_info>(new_state, n_info));
+				struct node_info n_info = {
+					std::make_shared<SearchAction>(action),
+					best_choice,
+					new_depth
+				};
+				info.insert(std::pair<std::shared_ptr<SearchState>, node_info>(new_state, n_info));
 			}
 			
 			if (new_state->isFinal()) {
@@ -155,6 +158,8 @@ std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
 					solution.push_back(*(info.at(new_state).action));
 					new_state = info[new_state].parent;
 				}
+				// reverse the solution
+				std::reverse(solution.begin(), solution.end());
 				return solution;
 			}
 		}
