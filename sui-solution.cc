@@ -100,7 +100,28 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 }
 
 double StudentHeuristic::distanceLowerBound(const GameState &state) const {
-    return 0;
+	int stack_sum = 0;
+	for (auto stack: state.stacks) {
+		int sum = 0;
+
+		std::vector<int> values;
+		for (auto card: stack.storage()) {
+			sum += card.value;
+			values.push_back(card.value);
+		}
+		stack_sum += sum;
+
+		for (long unsigned int i = 0; i + 1 < values.size(); i++) {
+			int diff = values.at(i + 1) - values.at(i);
+			if (diff > 0)
+				stack_sum += diff;
+		}
+	}
+	for (const auto &cell: state.free_cells) {
+		if (cell.topCard().has_value())
+			stack_sum += cell.topCard().value().value * 10;
+	}
+    return stack_sum;
 }
 
 std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
