@@ -5,6 +5,7 @@
 #include <memory>
 #include <algorithm> 
 #include <stack>
+#include "memusage.h"
 
 
 std::vector<SearchAction> BreadthFirstSearch::solve(const SearchState &init_state) {
@@ -17,6 +18,9 @@ std::vector<SearchAction> BreadthFirstSearch::solve(const SearchState &init_stat
 	parent[init_state] = std::make_shared<SearchState>(init_state); 
 	
 	while (!q.empty()) {
+		if (getCurrentRSS() > mem_limit_ * 0.9)
+			return {};
+
 		std::shared_ptr<SearchState> current_state = q.front();
 		q.pop();
 
@@ -102,25 +106,39 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 double StudentHeuristic::distanceLowerBound(const GameState &state) const {
 	int stack_sum = 0;
 	for (auto stack: state.stacks) {
-		int sum = 0;
-
-		std::vector<int> values;
-		for (auto card: stack.storage()) {
-			sum += card.value;
-			values.push_back(card.value);
-		}
-		stack_sum += sum;
-
-		for (long unsigned int i = 0; i + 1 < values.size(); i++) {
-			int diff = values.at(i + 1) - values.at(i);
-			if (diff > 0)
-				stack_sum += diff;
+		std::vector<Card> cards = stack.storage();			
+		for (long unsigned i = 0; i + 1 < cards.size(); i++) {
+			long unsigned depth = cards.size() - i;
+			if (cards.at(i).value == cards.at(i + 1).value + 1) {
+				if (render_color_map.at(cards.at(i).color) == render_color_map.at(cards.at(i + 1).color)) {
+					stack_sum += 2;
+				}
+				else {
+					stack_sum -= depth;
+				}
+			}
+			else {
+				if (cards.at(i).value < cards.at(i + 1).value) {
+					stack_sum += (cards.at(i + 1).value - cards.at(i).value - 1) * depth;
+				}
+				else {
+					stack_sum += cards.at(i).value - cards.at(i + 1).value + 1;
+				}
+			}
 		}
 	}
+
 	for (const auto &cell: state.free_cells) {
-		if (cell.topCard().has_value())
-			stack_sum += cell.topCard().value().value * 10;
+		auto cell_top = cell.topCard();
+		if (cell_top.has_value())
+			stack_sum += 7;
 	}
+
+    for (const auto &home : state.homes) {
+        auto home_top = home.topCard();
+        if (home_top.has_value())
+            stack_sum -= home_top->value * 13;
+    }
     return stack_sum;
 }
 
@@ -141,6 +159,9 @@ std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
 	info[shared_init_state].depth = 0;
 	
 	while (!open.empty()) {
+		if (getCurrentRSS() > mem_limit_ * 0.9)
+			return {};
+
 		int best = std::numeric_limits<int>::max();
 		std::shared_ptr<SearchState> best_choice = nullptr;
 
@@ -148,7 +169,6 @@ std::vector<SearchAction> AStarSearch::solve(const SearchState &init_state) {
 		for (std::shared_ptr<SearchState> state_ptr: open) {
 			int h = compute_heuristic(*state_ptr, *heuristic_);
 			int g = info[state_ptr].depth;
-			// std::cout << "BEST: " << best << "\nh(x)+g(x): " << h + g << std::endl << std::endl;
 			if (h + g < best) {
 				best = h + g;
 				best_choice = state_ptr;
