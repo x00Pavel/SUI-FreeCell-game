@@ -72,7 +72,7 @@ std::vector<SearchAction> DepthFirstSearch::solve(const SearchState &init_state)
 		s.pop();
 		closed.insert(*current_state);
 		int curr_depth = info[current_state].depth;
-		if (curr_depth <= depth_limit_) {
+		if (curr_depth <= depth_limit_ || depth_limit_ == 0) {
 			int new_depth = curr_depth + 1;
 
 			for (auto action : current_state->actions()) {
